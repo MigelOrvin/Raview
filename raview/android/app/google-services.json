@@ -1,0 +1,86 @@
+{
+  "project_info": {
+    "project_number": "381993077269",
+    "project_id": "notes-3b779",
+    "storage_bucket": "notes-3b779.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:381993077269:android:271b9631f2635757ad5c1c",
+        "android_client_info": {
+          "package_name": "com.example.music_player"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDDQzF-ulEfSZfkkGAL43YunH0WKZjLq0k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:381993077269:android:c0d0bd38e214e373ad5c1c",
+        "android_client_info": {
+          "package_name": "com.example.notes"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDDQzF-ulEfSZfkkGAL43YunH0WKZjLq0k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:381993077269:android:8d1eb85d14721940ad5c1c",
+        "android_client_info": {
+          "package_name": "com.example.raview"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDDQzF-ulEfSZfkkGAL43YunH0WKZjLq0k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:381993077269:android:1c185fbbe297e1b6ad5c1c",
+        "android_client_info": {
+          "package_name": "com.musicplayer.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDDQzF-ulEfSZfkkGAL43YunH0WKZjLq0k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
