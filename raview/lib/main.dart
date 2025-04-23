@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:raview/designdata/auto/change_mode_theme_provider.dart';
 import 'package:raview/designdata/theme/app_theme.dart';
 import 'package:raview/firebase_options.dart';
+import 'package:raview/mainfile/homepage/detailhomepage/profile.dart';
+import 'package:raview/mainfile/homepage/home.dart';
 import 'package:raview/mainfile/splash.dart';
 
 void main() async {
@@ -23,7 +25,8 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: Provider.of<ThemeProvider>(context).themeData,
-      home: const SplashScreen(),
+      home: const HomePage(),
+      // home: const SplashScreen(),
     );
   }
 }
