@@ -1,8 +1,14 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:raview/designdata/assets/vector/vectorlink.dart';
 import 'package:raview/designdata/assets/widgets/AppBar.dart';
+import 'package:raview/designdata/assets/widgets/BasicButton.dart';
 import 'package:raview/designdata/auto/isdarkmode.dart';
+import 'package:raview/mainfile/auth/signin.dart';
+import 'package:raview/mainfile/homepage/home.dart';
+import 'package:raview/service/auth/auth_service.dart';
+import 'package:raview/service/model/createrequest.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -34,7 +40,7 @@ class _SignUpPageState extends State<SignUpPage> {
       body: Padding(
         padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 30),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 10),
+          padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -46,6 +52,43 @@ class _SignUpPageState extends State<SignUpPage> {
               const SizedBox(height: 20),
               _passField(context),
               const SizedBox(height: 20),
+              BasicButton(
+                onPressed: () async {
+                  AuthService authService = AuthService();
+                  var x = authService.signUp(
+                    CreateRequest(
+                      fullName: _fullName.text.toString(),
+                      email: _email.text.toString(),
+                      password: _pass.text.toString(),
+                    ),
+                  );
+
+                  x.then((value) {
+                    value.fold(
+                      (l) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(l.toString()),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      (r) {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                            builder: (BuildContext context) => const HomePage(),
+                          ), (route) => false
+                        );
+                      },
+                    );
+                  });
+                  
+
+                  
+                },
+                title: "Make an Account",
+              ),
             ],
           ),
         ),
@@ -64,7 +107,14 @@ class _SignUpPageState extends State<SignUpPage> {
             style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
           ),
           TextButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (BuildContext context) => const SignInPage(),
+                ),
+              );
+            },
             child: Text("Sign In", style: TextStyle(color: Color(0xff98855A))),
           ),
         ],
@@ -86,6 +136,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
   Widget _fullNameField(BuildContext context) {
     return TextField(
+      cursorColor: context.isDarkMode ? Colors.white : Colors.black,
       controller: _fullName,
       decoration: const InputDecoration(
         hintText: "Full Name",
@@ -95,6 +146,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
   Widget _emailField(BuildContext context) {
     return TextField(
+      cursorColor: context.isDarkMode ? Colors.white : Colors.black,
       controller: _email,
       decoration: const InputDecoration(
         hintText: "Your Email",
@@ -104,6 +156,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
   Widget _passField(BuildContext context) {
     return TextField(
+      cursorColor: context.isDarkMode ? Colors.white : Colors.black,
       controller: _pass,
       obscureText: _obscureText,
       decoration: InputDecoration(
