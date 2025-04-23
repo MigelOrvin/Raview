@@ -104,5 +104,21 @@ class AppTheme {
           )
         ),
       ),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: const Color(0xff1E1E1E),
+        selectedItemColor: const Color(0xff98855A),
+        unselectedItemColor: Colors.white,
+        showUnselectedLabels: false,
+        selectedLabelStyle: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+        type: BottomNavigationBarType.fixed,
+        elevation: 3
+      )
   );
 }
