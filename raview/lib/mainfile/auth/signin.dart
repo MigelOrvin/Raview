@@ -5,6 +5,9 @@ import 'package:raview/designdata/assets/widgets/AppBar.dart';
 import 'package:raview/designdata/assets/widgets/BasicButton.dart';
 import 'package:raview/designdata/auto/isdarkmode.dart';
 import 'package:raview/mainfile/auth/signup.dart';
+import 'package:raview/mainfile/homepage/home.dart';
+import 'package:raview/service/auth/auth_service.dart';
+import 'package:raview/service/model/signinrequest.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -46,7 +49,33 @@ class _SignInPageState extends State<SignInPage> {
               const SizedBox(height: 20),
               _passField(context),
               const SizedBox(height: 50),
-              BasicButton(onPressed: () {}, title: "Sign In",),
+              BasicButton(
+                onPressed: () async {
+                  AuthService authService = AuthService();
+                  var x = await authService.signIn(
+                    SigninRequest(
+                      email: _email.text.toString(),
+                      password: _pass.text.toString(),
+                    ),
+                  );
+                  x.fold(
+                    (l) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(l.toString())));
+                    },
+                    (r) {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (BuildContext context) => const HomePage(),
+                        ),
+                      );
+                    },
+                  );
+                },
+                title: "Sign In",
+              ),
             ],
           ),
         ),
@@ -54,8 +83,7 @@ class _SignInPageState extends State<SignInPage> {
     );
   }
 
-
-   Widget _register(BuildContext context) {
+  Widget _register(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 30),
       child: Row(
@@ -65,16 +93,26 @@ class _SignInPageState extends State<SignInPage> {
             "Not a Member?",
             style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
           ),
-          TextButton(onPressed: () {
-             Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context)=>SignUpPage()));
-                              
-          }, child: const Text("Register Now", style: TextStyle(color: Color(0xff98855A)),))
+          TextButton(
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (BuildContext context) => SignUpPage(),
+                ),
+              );
+            },
+            child: const Text(
+              "Register Now",
+              style: TextStyle(color: Color(0xff98855A)),
+            ),
+          ),
         ],
       ),
     );
   }
 
-   Widget _signInText() {
+  Widget _signInText() {
     return Text(
       'Sign In',
       style: TextStyle(
@@ -86,12 +124,13 @@ class _SignInPageState extends State<SignInPage> {
     );
   }
 
-    Widget _emailField(BuildContext context) {
+  Widget _emailField(BuildContext context) {
     return TextField(
       cursorColor: context.isDarkMode ? Colors.white : Colors.black,
       controller: _email,
-      decoration: const InputDecoration(hintText: "Enter your Email")
-          .applyDefaults(Theme.of(context).inputDecorationTheme),
+      decoration: const InputDecoration(
+        hintText: "Enter your Email",
+      ).applyDefaults(Theme.of(context).inputDecorationTheme),
     );
   }
 
@@ -103,9 +142,7 @@ class _SignInPageState extends State<SignInPage> {
       decoration: InputDecoration(
         hintText: "Password",
         suffixIcon: IconButton(
-          icon: Icon(
-            _obscureText ? Icons.visibility : Icons.visibility_off,
-          ),
+          icon: Icon(_obscureText ? Icons.visibility : Icons.visibility_off),
           onPressed: () {
             setState(() {
               _obscureText = !_obscureText;
@@ -115,5 +152,4 @@ class _SignInPageState extends State<SignInPage> {
       ).applyDefaults(Theme.of(context).inputDecorationTheme),
     );
   }
-
-} 
+}
