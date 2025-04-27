@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:raview/service/model/createrequest.dart';
@@ -10,16 +11,22 @@ abstract class AuthFirebaseService {
 
   Future<Either> signUp(CreateRequest createRequest);
   Future<Either> signIn(SigninRequest signinRequest);
+  Future<Either> getUser();
 }
 
 class AuthService extends AuthFirebaseService{
   @override
   Future<Either> signUp(CreateRequest createRequest) async{
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      var data = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: createRequest.email,
         password: createRequest.password,
       );
+      FirebaseFirestore.instance
+          .collection("Users")
+          .doc(data.user?.uid)
+          .set({'name': createRequest.fullName, 'email': data.user?.email});
+
 
       return const Right('Sign Up was Successful');
     }on FirebaseAuthException catch(e){
@@ -59,5 +66,12 @@ class AuthService extends AuthFirebaseService{
       return left(message);
     }
   }
+  
+  @override
+  Future<Either> getUser() async{
+    return currentUser != null ? Right(currentUser) : Left("No user found");
+  }
+
+
 
 }

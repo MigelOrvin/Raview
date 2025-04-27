@@ -4,7 +4,7 @@ class AppTheme {
 
   static final LightTheme = ThemeData(
     brightness: Brightness.light,
-    scaffoldBackgroundColor: Colors.white,
+    scaffoldBackgroundColor: Color(0xffFAFAFA),
     fontFamily: 'Satoshi',
     primaryColor: const Color.fromARGB(152, 135, 90, 1),
     
@@ -53,6 +53,22 @@ class AppTheme {
         
         ),
       ),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: Colors.white,
+        selectedItemColor: const Color(0xff98855A),
+        unselectedItemColor: const Color(0xff757575),
+        showUnselectedLabels: false,
+        selectedLabelStyle: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+        type: BottomNavigationBarType.fixed,
+        elevation: 3
+      )
   );
 
   static final DarkTheme = ThemeData(
