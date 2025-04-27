@@ -27,28 +27,32 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: selected,
-        onTap: (index){
-          setState(() {
-            selected = index;
-          });
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search_rounded),
-            label: 'Explore',
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(border: Border(top: BorderSide(color: Colors.grey.shade300, width: 1))),
+        child: BottomNavigationBar(
+          
+          currentIndex: selected,
+          onTap: (index){
+            setState(() {
+              selected = index;
+            });
+          },
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.search_rounded),
+              label: 'Explore',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.favorite_outline_outlined),
+              label: 'Wishlist',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.account_circle_outlined),
+              label: 'Profile',
+            ),
+          ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_outline_outlined),
-            label: 'Widhlist',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle_outlined),
-            label: 'Profile',
-          ),
-        ],
-        ),
+      ),
       body: pages[selected],
     );
   }

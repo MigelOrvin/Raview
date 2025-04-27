@@ -1,15 +1,30 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:provider/provider.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:raview/designdata/assets/vector/vectorlink.dart';
 import 'package:raview/designdata/assets/widgets/BasicButton.dart';
-import 'package:raview/designdata/auto/change_mode_theme_provider.dart';
+import 'package:raview/designdata/assets/widgets/snackbar.dart';
 import 'package:raview/designdata/auto/isdarkmode.dart';
 import 'package:raview/mainfile/auth/signin.dart';
 import 'package:raview/mainfile/auth/signup.dart';
 
-class SignupSigninScreen extends StatelessWidget {
+class SignupSigninScreen extends StatefulWidget {
   const SignupSigninScreen({super.key});
+
+  @override
+  State<SignupSigninScreen> createState() => _SignupSigninScreenState();
+}
+
+class _SignupSigninScreenState extends State<SignupSigninScreen> {
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(Duration(seconds: 1), () {
+    showSnackBar();
+  });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -108,5 +123,19 @@ class SignupSigninScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+  
+  Future<void> showSnackBar() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+       final snackbar = SnackBar(
+      elevation: 0,
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: Colors.transparent,
+      content: AwesomeSnackbarContent(title: "Warning!", message: "Location permission is required to proceed. Please enable it in your settings.", contentType: ContentType.warning, color: Color(0xff98855A),),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackbar);
+    }
+    
   }
 }

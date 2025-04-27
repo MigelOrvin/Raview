@@ -1,9 +1,9 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:raview/designdata/assets/vector/vectorlink.dart';
 import 'package:raview/designdata/assets/widgets/AppBar.dart';
 import 'package:raview/designdata/assets/widgets/BasicButton.dart';
+import 'package:raview/designdata/assets/widgets/snackbar.dart';
 import 'package:raview/designdata/auto/isdarkmode.dart';
 import 'package:raview/mainfile/auth/signin.dart';
 import 'package:raview/mainfile/homepage/home.dart';
@@ -18,10 +18,12 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController _fullName = TextEditingController();
   final TextEditingController _email = TextEditingController();
   final TextEditingController _pass = TextEditingController();
   bool _obscureText = true;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,63 +38,138 @@ class _SignUpPageState extends State<SignUpPage> {
           ),
         ),
       ),
-
       body: Padding(
         padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 30),
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              _registerText(),
-              const SizedBox(height: 100),
-              _fullNameField(context),
-              const SizedBox(height: 20),
-              _emailField(context),
-              const SizedBox(height: 20),
-              _passField(context),
-              const SizedBox(height: 20),
-              BasicButton(
-                onPressed: () async {
-                  AuthService authService = AuthService();
-                  var x = authService.signUp(
-                    CreateRequest(
-                      fullName: _fullName.text.toString(),
-                      email: _email.text.toString(),
-                      password: _pass.text.toString(),
-                    ),
-                  );
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _registerText(),
+                const SizedBox(height: 100),
+                _fullNameField(context),
+                const SizedBox(height: 20),
+                _emailField(context),
+                const SizedBox(height: 20),
+                _passField(context),
+                const SizedBox(height: 20),
+                BasicButton(
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+                      AuthService authService = AuthService();
+                      var x = authService.signUp(
+                        CreateRequest(
+                          fullName: _fullName.text.toString(),
+                          email: _email.text.toString(),
+                          password: _pass.text.toString(),
+                        ),
+                      );
 
-                  x.then((value) {
-                    value.fold(
-                      (l) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(l.toString()),
-                            duration: const Duration(seconds: 2),
-                          ),
+                      x.then((value) {
+                        value.fold(
+                          (l) {
+                            final snackbar = SnackBar(
+                              elevation: 0,
+                              behavior: SnackBarBehavior.floating,
+                              backgroundColor: Colors.transparent,
+                              content: AwesomeSnackbarContent(
+                                title: "Warning!",
+                                message: l.toString(),
+                                contentType: ContentType.warning,
+                                color: Color(0xff98855A),
+                              ),
+                            );
+                            ScaffoldMessenger.of(context).showSnackBar(snackbar);
+                          },
+                          (r) {
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                builder: (BuildContext context) => const HomePage(),
+                              ),
+                              (route) => false,
+                            );
+                          },
                         );
-                      },
-                      (r) {
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(
-                            builder: (BuildContext context) => const HomePage(),
-                          ), (route) => false
-                        );
-                      },
-                    );
-                  });
-                  
-
-                  
-                },
-                title: "Make an Account",
-              ),
-            ],
+                      });
+                    }
+                  },
+                  title: "Make an Account",
+                ),
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _fullNameField(BuildContext context) {
+    return TextFormField(
+      cursorColor: context.isDarkMode ? Colors.white : Colors.black,
+      controller: _fullName,
+      decoration: const InputDecoration(
+        hintText: "Full Name",
+      ).applyDefaults(Theme.of(context).inputDecorationTheme),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return "Full Name is required";
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _emailField(BuildContext context) {
+    return TextFormField(
+      cursorColor: context.isDarkMode ? Colors.white : Colors.black,
+      controller: _email,
+      keyboardType: TextInputType.emailAddress,
+      decoration: const InputDecoration(
+        hintText: "Your Email",
+      ).applyDefaults(Theme.of(context).inputDecorationTheme),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return "Email is required";
+        }
+        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+          return "Enter a valid email";
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _passField(BuildContext context) {
+    return TextFormField(
+      cursorColor: context.isDarkMode ? Colors.white : Colors.black,
+      controller: _pass,
+      obscureText: _obscureText,
+      decoration: InputDecoration(
+        hintText: "Password",
+        suffixIcon: Padding(
+          padding: const EdgeInsets.only(right: 20.0),
+          child: IconButton(
+            icon: Icon(_obscureText ? Icons.visibility : Icons.visibility_off),
+            onPressed: () {
+              setState(() {
+                _obscureText = !_obscureText;
+              });
+            },
+          ),
+        ),
+      ).applyDefaults(Theme.of(context).inputDecorationTheme),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return "Password is required";
+        }
+        if (value.length < 6) {
+          return "Password must be at least 6 characters";
+        }
+        return null;
+      },
     );
   }
 
@@ -131,48 +208,6 @@ class _SignUpPageState extends State<SignUpPage> {
         color: context.isDarkMode ? Colors.white : Colors.black,
       ),
       textAlign: TextAlign.center,
-    );
-  }
-
-  Widget _fullNameField(BuildContext context) {
-    return TextField(
-      cursorColor: context.isDarkMode ? Colors.white : Colors.black,
-      controller: _fullName,
-      decoration: const InputDecoration(
-        hintText: "Full Name",
-      ).applyDefaults(Theme.of(context).inputDecorationTheme),
-    );
-  }
-
-  Widget _emailField(BuildContext context) {
-    return TextField(
-      cursorColor: context.isDarkMode ? Colors.white : Colors.black,
-      controller: _email,
-      decoration: const InputDecoration(
-        hintText: "Your Email",
-      ).applyDefaults(Theme.of(context).inputDecorationTheme),
-    );
-  }
-
-  Widget _passField(BuildContext context) {
-    return TextField(
-      cursorColor: context.isDarkMode ? Colors.white : Colors.black,
-      controller: _pass,
-      obscureText: _obscureText,
-      decoration: InputDecoration(
-        hintText: "Password",
-        suffixIcon: Padding(
-          padding: const EdgeInsets.only(right: 25.0),
-          child: IconButton(
-            icon: Icon(_obscureText ? Icons.visibility : Icons.visibility_off),
-            onPressed: () {
-              setState(() {
-                _obscureText = !_obscureText;
-              });
-            },
-          ),
-        ),
-      ).applyDefaults(Theme.of(context).inputDecorationTheme),
     );
   }
 }

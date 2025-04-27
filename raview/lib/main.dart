@@ -2,7 +2,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:raview/designdata/auto/change_mode_theme_provider.dart';
-import 'package:raview/designdata/theme/app_theme.dart';
 import 'package:raview/firebase_options.dart';
 import 'package:raview/mainfile/splash.dart';
 
