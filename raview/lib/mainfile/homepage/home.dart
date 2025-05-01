@@ -96,11 +96,11 @@ class _HomePageState extends State<HomePage> {
             color: context.isDarkMode
                 ? const Color(0xff1E1E1E)
                 : const Color(0xffFAFAFA).withOpacity(0.5),
-            borderRadius: const BorderRadius.all(Radius.circular(20)),
+            borderRadius: const BorderRadius.all(Radius.circular(60)),
             boxShadow: [
               BoxShadow(
                 color: context.isDarkMode
-                    ? const Color.fromARGB(255, 148, 148, 148).withOpacity(0.3)
+                    ? const Color.fromARGB(255, 0, 0, 0).withOpacity(0.3)
                     : const Color.fromARGB(255, 0, 0, 0).withOpacity(0.3),
                 blurRadius: 20,
                 offset: const Offset(0, 20),
