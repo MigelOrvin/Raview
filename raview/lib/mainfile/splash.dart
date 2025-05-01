@@ -60,13 +60,27 @@ class _SplashScreenState extends State<SplashScreen> {
       await prefs.setString('userId', user.uid);
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (BuildContext context) => const HomePage()),
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) {
+            return const HomePage();
+          },
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          transitionDuration: const Duration(milliseconds: 500),
+        ),
       );
     } else {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (BuildContext context) => const SignupSigninScreen(),
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) {
+            return const SignupSigninScreen();
+          },
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          transitionDuration: const Duration(milliseconds: 500),
         ),
       );
     }
