@@ -30,6 +30,7 @@ class AuthService extends AuthFirebaseService {
         'createdAt': Timestamp.now(),
         'userImg': null,
       });
+      
 
       return const Right('Sign Up was Successful');
     } on FirebaseAuthException catch (e) {

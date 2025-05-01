@@ -3,10 +3,9 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:geocoding/geocoding.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:raview/designdata/auto/change_mode_theme_provider.dart';
@@ -33,7 +32,6 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _isEmailVisible = false;
   File? _image;
-  String? _base64Image;
   final ImagePicker _picker = ImagePicker();
   
 
@@ -120,18 +118,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Container(
-            alignment: Alignment.center,
-            height: 104,
-            width: 104,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              image: DecorationImage(
-                image: NetworkImage(
-                  userData['profilePicture'] ??
-                      'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Default_pfp.svg/2048px-Default_pfp.svg.png',
+          InkResponse(
+            onDoubleTap: () {
+              _showImageSourceDialog();
+            },
+            child: Container(
+              alignment: Alignment.center,
+              height: 104,
+              width: 104,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                image: DecorationImage(
+                  image: NetworkImage(
+                    userData['profilePicture'] ??
+                        'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Default_pfp.svg/2048px-Default_pfp.svg.png',
+                  ),
+                  fit: BoxFit.cover,
                 ),
-                fit: BoxFit.cover,
               ),
             ),
           ),
@@ -292,27 +295,90 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return '$obfuscatedUsername@$domain';
   }
 
-  Future<void> _compressAndEncodeImage() async {
-    if (_image == null) return;
-    final compressedImage = await FlutterImageCompress.compressWithFile(
-      _image!.path,
-      quality: 50,
-    );
-    if (compressedImage == null) return;
-    setState(() {
-      _base64Image = base64Encode(compressedImage);
-    });
-  }
 
-  Future<void> _pickImage(ImageSource source) async {
-    final pickedFile = await _picker.pickImage(source: source);
-    if (pickedFile != null) {
-      setState(() {
-        _image = File(pickedFile.path);
-      });
-      await _compressAndEncodeImage();
+Future<void> _pickImage(ImageSource source) async {
+  final pickedFile = await _picker.pickImage(source: source);
+  if (pickedFile != null) {
+    final File imageFile = File(pickedFile.path);
+    final compressedImage = await FlutterImageCompress.compressWithFile(
+      imageFile.absolute.path,
+      quality: 60, 
+    );
+
+    if (compressedImage != null) {
+      final compressedFile = File('${imageFile.path}_compressed');
+      await compressedFile.writeAsBytes(compressedImage);
+
+      final userId = FirebaseAuth.instance.currentUser!.uid;
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('profilePictures')
+          .child('$userId.jpg');
+
+      try {
+        await storageRef.putFile(compressedFile);
+        final downloadUrl = await storageRef.getDownloadURL();
+        await FirebaseFirestore.instance
+            .collection('Users')
+            .doc(userId)
+            .update({'profilePicture': downloadUrl});
+
+        setState(() {
+          _image = compressedFile;
+        });
+      } catch (e) {
+        print('Error uploading image: $e');
+      }
     }
   }
+}
 
+Future<String?> getImage() async {
+  final userId = FirebaseAuth.instance.currentUser!.uid;
+  try {
+    final storageRef = FirebaseStorage.instance
+        .ref()
+        .child('profilePictures')
+        .child('$userId.jpg');
+    return await storageRef.getDownloadURL();
+  } catch (e) {
+    print('Error fetching image URL: $e');
+    return null;
+  }
+}
+
+  void _showImageSourceDialog() {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: context.isDarkMode ? const Color(0xff292828) : Colors.white,
+            title: Text("Choose Image Source"),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.camera);
+                },
+                child: Text("Camera", 
+                    style: TextStyle(
+                      color: context.isDarkMode ? Colors.white : Colors.black,
+                      fontWeight: FontWeight.bold
+                    )),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.gallery);
+                },
+                child: Text("Gallery",style: TextStyle(
+                      color: context.isDarkMode ? Colors.white : Colors.black,
+                      fontWeight: FontWeight.bold
+                    )),
+              ),
+            ],
+          ),
+    );
+  }
   
 }
