@@ -24,13 +24,12 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: SvgPicture.asset(VectorLink.logoSplash),
-      ),
+      body: Center(child: SvgPicture.asset(VectorLink.logoSplash)),
     );
   }
 
   Future<void> _initializeApp() async {
+    await Future.delayed(const Duration(seconds: 2));
     await _getPermissionLocation();
     await _checkLoginStatus();
   }

@@ -12,53 +12,56 @@ abstract class AuthFirebaseService {
   Future<Either> signUp(CreateRequest createRequest);
   Future<Either> signIn(SigninRequest signinRequest);
   Future<Either> getUser();
+  Future<void> signOut();
 }
 
-class AuthService extends AuthFirebaseService{
+class AuthService extends AuthFirebaseService {
   @override
-  Future<Either> signUp(CreateRequest createRequest) async{
+  Future<Either> signUp(CreateRequest createRequest) async {
     try {
       var data = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: createRequest.email,
+        email: createRequest.email.trim(),
         password: createRequest.password,
       );
-      FirebaseFirestore.instance
-          .collection("Users")
-          .doc(data.user?.uid)
-          .set({'name': createRequest.fullName, 'email': data.user?.email});
 
+      FirebaseFirestore.instance.collection("Users").doc(data.user?.uid).set({
+        'name': createRequest.fullName,
+        'email': data.user?.email,
+        'createdAt': Timestamp.now(),
+        'userImg': null,
+      });
 
       return const Right('Sign Up was Successful');
-    }on FirebaseAuthException catch(e){
+    } on FirebaseAuthException catch (e) {
       String message = "";
       if (e.code == "weak-password") {
         message = "The password provided is too weak.";
-      } else if(e.code == "email-already-in-use"){
+      } else if (e.code == "email-already-in-use") {
         message = "The account already exists for that email.";
-      } 
+      }
       return left(message);
     }
   }
-  
+
   @override
   Future<Either> signIn(SigninRequest signinRequest) async {
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: signinRequest.email,
+        email: signinRequest.email.trim(),
         password: signinRequest.password,
       );
       return const Right('Sign In was Successful');
-    } on FirebaseAuthException catch(e){
+    } on FirebaseAuthException catch (e) {
       String message = "";
       if (e.code == "user-not-found") {
         message = "No user found for that email.";
-      } else if(e.code == "wrong-password"){
+      } else if (e.code == "wrong-password") {
         message = "Wrong password provided for that user.";
-      } else if(e.code == "invalid-email"){
+      } else if (e.code == "invalid-email") {
         message = "The email address is badly formatted.";
-      } else if(e.code == "user-disabled"){
+      } else if (e.code == "user-disabled") {
         message = "User with this email has been disabled.";
-      } else if(e.code == "operation-not-allowed"){
+      } else if (e.code == "operation-not-allowed") {
         message = "Signing in with Email and Password is not enabled.";
       } else {
         message = e.message.toString();
@@ -66,12 +69,14 @@ class AuthService extends AuthFirebaseService{
       return left(message);
     }
   }
-  
+
   @override
-  Future<Either> getUser() async{
+  Future<Either> getUser() async {
     return currentUser != null ? Right(currentUser) : Left("No user found");
   }
 
-
-
+  @override
+  Future<void> signOut() async {
+    await _firebaseAuth.signOut();
+  }
 }

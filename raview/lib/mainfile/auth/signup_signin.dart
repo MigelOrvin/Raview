@@ -79,6 +79,7 @@ class _SignupSigninScreenState extends State<SignupSigninScreen> {
                       Expanded(
                         flex: 1,
                         child: BasicButton(
+                          
                           onPressed: () {
                             Navigator.push(
                               context,

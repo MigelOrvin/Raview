@@ -54,7 +54,7 @@ class AppTheme {
         ),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         selectedItemColor: const Color(0xff98855A),
         unselectedItemColor: const Color(0xff757575),
         showUnselectedLabels: false,
@@ -121,7 +121,7 @@ class AppTheme {
         ),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: const Color(0xff1E1E1E),
+        backgroundColor: Colors.transparent,
         selectedItemColor: const Color(0xff98855A),
         unselectedItemColor: Colors.white,
         showUnselectedLabels: false,
