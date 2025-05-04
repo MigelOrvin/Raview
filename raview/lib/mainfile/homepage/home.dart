@@ -51,7 +51,7 @@ class _HomePageState extends State<HomePage> {
         setState(() {
           latitude = position.latitude;
           longitude = position.longitude;
-          locality = placemarks[0].street;
+          locality = placemarks[0].thoroughfare;
 
           pages = [
             exploreScreen(),
@@ -91,7 +91,7 @@ class _HomePageState extends State<HomePage> {
       bottomNavigationBar: SafeArea(
         child: Container(
           padding: const EdgeInsets.all(12),
-          margin: const EdgeInsets.symmetric(horizontal: 24),
+          margin: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
           decoration: BoxDecoration(
             color: context.isDarkMode
                 ? const Color(0xff1E1E1E)
