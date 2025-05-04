@@ -128,12 +128,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
               width: 104,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
+                border: Border.all(
+                  color: context.isDarkMode
+                      ? const Color.fromARGB(255, 255, 255, 255)
+                      : const Color.fromARGB(255, 77, 77, 77),
+                  width: 2,
+                ),
                 image: DecorationImage(
                   image: NetworkImage(
                     userData['profilePicture'] ??
                         'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Default_pfp.svg/2048px-Default_pfp.svg.png',
                   ),
                   fit: BoxFit.cover,
+                  
                 ),
               ),
             ),
