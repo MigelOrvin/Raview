@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:raview/designdata/auto/isdarkmode.dart';
+import 'package:raview/mainfile/homepage/detailhomepage/explorewidget/displaylistplace.dart';
 import 'package:raview/mainfile/homepage/detailhomepage/explorewidget/searchbarexplore.dart';
 
 class ExploreScreen extends StatefulWidget {
@@ -15,7 +16,14 @@ class _ExploreScreenState extends State<ExploreScreen> {
     'Categories',
   );
   int selected = 0;
+  String? selectedCategory;
 
+
+  @override
+  void initState() {
+    super.initState();
+    selectedCategory = 'ALL';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,111 +34,118 @@ class _ExploreScreenState extends State<ExploreScreen> {
         child: Column(
           children: [
             SearchBarAndFilter(),
-            StreamBuilder(
-              stream: categoryRef.snapshots(),
-              builder: (context, streamSnapshot) {
-                if (streamSnapshot.hasData) {
-                  return Stack(
-                    children: [
-                      Positioned(
-                        top: 70,
-                        left: 0,
-                        right: 0,
-                        child: Divider(
-                          color:
-                              context.isDarkMode
-                                  ? Colors.white12
-                                  : Colors.black12,
-                        ),
+            catagoryList(size),
+            Expanded(child: Displaylistplace(jenis: selectedCategory!,))
+          ],
+        ),
+      ),
+    );
+  }
+
+  StreamBuilder<QuerySnapshot<Object?>> catagoryList(Size size) {
+    return StreamBuilder(
+            stream: categoryRef.orderBy('jenis', descending: false).snapshots(),
+            builder: (context, streamSnapshot) {
+              if (streamSnapshot.hasData) {
+                return Stack(
+                  children: [
+                    Positioned(
+                      top: 70,
+                      left: 0,
+                      right: 0,
+                      child: Divider(
+                        color:
+                            context.isDarkMode
+                                ? Colors.white12
+                                : Colors.black12,
                       ),
-                      SizedBox(
-                        height: size.height * 0.12,
-                        child: ListView.builder(
-                          padding: EdgeInsets.zero,
-                          scrollDirection: Axis.horizontal,
-                          itemCount: streamSnapshot.data!.docs.length,
-                          physics: BouncingScrollPhysics(),
-                          itemBuilder: (context, index) {
-                            return GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  selected = index;
-                                });
-                              },
-                              child: Container(
-                                padding: EdgeInsets.only(
-                                  top: 10,
-                                  right: 20,
-                                  left: 20,
-                                ),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                                child: Column(
-                                  children: [
-                                    Container(
-                                      height: 32,
-                                      width: 40,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Image.network(
-                                        streamSnapshot
-                                            .data!
-                                            .docs[index]['image'],
-                                        color:
-                                            selected == index
-                                                ? context.isDarkMode
-                                                    ? Colors.white
-                                                    : Colors.black
-                                                : context.isDarkMode
-                                                ? Colors.white54
-                                                : Colors.black45,
-                                      ),
+                    ),
+                    SizedBox(
+                      height: size.height * 0.12,
+                      child: ListView.builder(
+                        padding: EdgeInsets.zero,
+                        scrollDirection: Axis.horizontal,
+                        itemCount: streamSnapshot.data!.docs.length,
+                        physics: BouncingScrollPhysics(),
+                        itemBuilder: (context, index) {
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                selected = index;
+                                selectedCategory = streamSnapshot
+                                    .data!.docs[index]['jenis'];
+                              });
+                            },
+                            child: Container(
+                              padding: EdgeInsets.only(
+                                top: 10,
+                                right: 20,
+                                left: 20,
+                              ),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: Column(
+                                children: [
+                                  Container(
+                                    height: 32,
+                                    width: 40,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
                                     ),
-                                    SizedBox(height: 5),
-                                    Text(
-                                      streamSnapshot.data!.docs[index]['jenis'],
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w500,
-                                        color:
-                                            selected == index
-                                                ? context.isDarkMode
-                                                    ? Colors.white
-                                                    : Colors.black
-                                                : context.isDarkMode
-                                                ? Colors.white54
-                                                : Colors.black45,
-                                      ),
-                                    ),
-                                    SizedBox(height: 10),
-                                    Container(
-                                      height: 3,
-                                      width: 50,
+                                    child: Image.network(
+                                      streamSnapshot
+                                          .data!
+                                          .docs[index]['image'],
                                       color:
                                           selected == index
                                               ? context.isDarkMode
                                                   ? Colors.white
                                                   : Colors.black
-                                              : Colors.transparent,
+                                              : context.isDarkMode
+                                              ? Colors.white54
+                                              : Colors.black45,
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                  SizedBox(height: 5),
+                                  Text(
+                                    streamSnapshot.data!.docs[index]['jenis'],
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color:
+                                          selected == index
+                                              ? context.isDarkMode
+                                                  ? Colors.white
+                                                  : Colors.black
+                                              : context.isDarkMode
+                                              ? Colors.white54
+                                              : Colors.black45,
+                                    ),
+                                  ),
+                                  SizedBox(height: 10),
+                                  Container(
+                                    height: 3,
+                                    width: 50,
+                                    color:
+                                        selected == index
+                                            ? context.isDarkMode
+                                                ? Colors.white
+                                                : Colors.black
+                                            : Colors.transparent,
+                                  ),
+                                ],
                               ),
-                            );
-                          },
-                        ),
+                            ),
+                          );
+                        },
                       ),
-                    ],
-                  );
-                }
-                return Center(child: CircularProgressIndicator());
-              },
-            ),
-          ],
-        ),
-      ),
-    );
+                    ),
+                  ],
+                );
+              }
+              return Center(child: CircularProgressIndicator());
+            },
+          );
   }
 }

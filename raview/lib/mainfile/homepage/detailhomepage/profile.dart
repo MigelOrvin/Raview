@@ -420,7 +420,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
             ),
-            // Dialog gambar
              Dialog(
                 backgroundColor: Colors.transparent, 
                 insetPadding: EdgeInsets.all(10), 

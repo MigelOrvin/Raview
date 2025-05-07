@@ -13,7 +13,6 @@ class ThemeProvider with ChangeNotifier {
 
   ThemeData get themeData => _themeData;
 
-  // Initialize SharedPreferences
   Future<void> loadTheme() async {
     prefs = await SharedPreferences.getInstance();
     final bool isDark = prefs.getBool(THEME_KEY) ?? false;
