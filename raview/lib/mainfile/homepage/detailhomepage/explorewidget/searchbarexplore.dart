@@ -44,7 +44,7 @@ class SearchBarAndFilter extends StatelessWidget {
                         ),
                         SizedBox(
                           height: 20,
-                          width: MediaQuery.of(context).size.width * 0.5, // 60% dari lebar layar
+                          width: MediaQuery.of(context).size.width * 0.5,
                           child: TextField(
                             style: TextStyle(
                               fontSize: 13,
