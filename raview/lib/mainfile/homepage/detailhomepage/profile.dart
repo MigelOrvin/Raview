@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -33,7 +34,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _isEmailVisible = false;
   File? _image;
   final ImagePicker _picker = ImagePicker();
-  
 
   @override
   Widget build(BuildContext context) {
@@ -119,6 +119,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           InkResponse(
+            onTap: () {
+              _showFullImageDialog(
+                userData['profilePicture'] ??
+                    'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Default_pfp.svg/2048px-Default_pfp.svg.png',
+              );
+            },
             onDoubleTap: () {
               _showImageSourceDialog();
             },
@@ -129,9 +135,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: context.isDarkMode
-                      ? const Color.fromARGB(255, 255, 255, 255)
-                      : const Color.fromARGB(255, 77, 77, 77),
+                  color:
+                      context.isDarkMode
+                          ? const Color.fromARGB(255, 255, 255, 255)
+                          : const Color.fromARGB(255, 77, 77, 77),
                   width: 2,
                 ),
                 image: DecorationImage(
@@ -140,7 +147,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Default_pfp.svg/2048px-Default_pfp.svg.png',
                   ),
                   fit: BoxFit.cover,
-                  
                 ),
               ),
             ),
@@ -161,13 +167,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 1),
           Text.rich(
             TextSpan(
-              text: _isEmailVisible ?  userData['email'] : _obfuscateEmail(userData['email']),
+              text:
+                  _isEmailVisible
+                      ? userData['email']
+                      : _obfuscateEmail(userData['email']),
               style: TextStyle(
                 fontSize: 14,
                 color: context.isDarkMode ? Colors.white : Colors.black,
               ),
               children: [
-                
                 WidgetSpan(
                   child: GestureDetector(
                     child: Icon(
@@ -296,70 +304,71 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (parts.length != 2) return email;
     final username = parts[0];
     final domain = parts[1];
-    final obfuscatedUsername = username.length > 2
-        ? '${username[0]}${'*' * (username.length - 2)}${username[username.length - 1]}'
-        : '*' * username.length;
+    final obfuscatedUsername =
+        username.length > 2
+            ? '${username[0]}${'*' * (username.length - 2)}${username[username.length - 1]}'
+            : '*' * username.length;
     return '$obfuscatedUsername@$domain';
   }
 
+  Future<void> _pickImage(ImageSource source) async {
+    final pickedFile = await _picker.pickImage(source: source);
+    if (pickedFile != null) {
+      final File imageFile = File(pickedFile.path);
+      final compressedImage = await FlutterImageCompress.compressWithFile(
+        imageFile.absolute.path,
+        quality: 60,
+      );
 
-Future<void> _pickImage(ImageSource source) async {
-  final pickedFile = await _picker.pickImage(source: source);
-  if (pickedFile != null) {
-    final File imageFile = File(pickedFile.path);
-    final compressedImage = await FlutterImageCompress.compressWithFile(
-      imageFile.absolute.path,
-      quality: 60, 
-    );
+      if (compressedImage != null) {
+        final compressedFile = File('${imageFile.path}_compressed');
+        await compressedFile.writeAsBytes(compressedImage);
 
-    if (compressedImage != null) {
-      final compressedFile = File('${imageFile.path}_compressed');
-      await compressedFile.writeAsBytes(compressedImage);
+        final userId = FirebaseAuth.instance.currentUser!.uid;
+        final storageRef = FirebaseStorage.instance
+            .ref()
+            .child('profilePictures')
+            .child('$userId.jpg');
 
-      final userId = FirebaseAuth.instance.currentUser!.uid;
+        try {
+          await storageRef.putFile(compressedFile);
+          final downloadUrl = await storageRef.getDownloadURL();
+          await FirebaseFirestore.instance
+              .collection('Users')
+              .doc(userId)
+              .update({'profilePicture': downloadUrl});
+
+          setState(() {
+            _image = compressedFile;
+          });
+        } catch (e) {
+          print('Error uploading image: $e');
+        }
+      }
+    }
+  }
+
+  Future<String?> getImage() async {
+    final userId = FirebaseAuth.instance.currentUser!.uid;
+    try {
       final storageRef = FirebaseStorage.instance
           .ref()
           .child('profilePictures')
           .child('$userId.jpg');
-
-      try {
-        await storageRef.putFile(compressedFile);
-        final downloadUrl = await storageRef.getDownloadURL();
-        await FirebaseFirestore.instance
-            .collection('Users')
-            .doc(userId)
-            .update({'profilePicture': downloadUrl});
-
-        setState(() {
-          _image = compressedFile;
-        });
-      } catch (e) {
-        print('Error uploading image: $e');
-      }
+      return await storageRef.getDownloadURL();
+    } catch (e) {
+      print('Error fetching image URL: $e');
+      return null;
     }
   }
-}
-
-Future<String?> getImage() async {
-  final userId = FirebaseAuth.instance.currentUser!.uid;
-  try {
-    final storageRef = FirebaseStorage.instance
-        .ref()
-        .child('profilePictures')
-        .child('$userId.jpg');
-    return await storageRef.getDownloadURL();
-  } catch (e) {
-    print('Error fetching image URL: $e');
-    return null;
-  }
-}
 
   void _showImageSourceDialog() {
     showDialog(
       context: context,
       builder:
           (context) => AlertDialog(
-            backgroundColor: context.isDarkMode ? const Color(0xff292828) : Colors.white,
+            backgroundColor:
+                context.isDarkMode ? const Color(0xff292828) : Colors.white,
             title: Text("Choose Image Source"),
             actions: [
               TextButton(
@@ -367,25 +376,68 @@ Future<String?> getImage() async {
                   Navigator.pop(context);
                   _pickImage(ImageSource.camera);
                 },
-                child: Text("Camera", 
-                    style: TextStyle(
-                      color: context.isDarkMode ? Colors.white : Colors.black,
-                      fontWeight: FontWeight.bold
-                    )),
+                child: Text(
+                  "Camera",
+                  style: TextStyle(
+                    color: context.isDarkMode ? Colors.white : Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
               TextButton(
                 onPressed: () {
                   Navigator.pop(context);
                   _pickImage(ImageSource.gallery);
                 },
-                child: Text("Gallery",style: TextStyle(
-                      color: context.isDarkMode ? Colors.white : Colors.black,
-                      fontWeight: FontWeight.bold
-                    )),
+                child: Text(
+                  "Gallery",
+                  style: TextStyle(
+                    color: context.isDarkMode ? Colors.white : Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ],
           ),
     );
   }
-  
+
+  void _showFullImageDialog(String imageUrl) {
+    showDialog(
+      context: context,
+      barrierDismissible: true, 
+      builder: (BuildContext context) {
+        return Stack(
+          children: [
+            GestureDetector(
+              onTap: () {
+                Navigator.of(context).pop(); 
+              },
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10), 
+                child: Container(
+                  color: Colors.black.withOpacity(0.5), 
+                ),
+              ),
+            ),
+            // Dialog gambar
+             Dialog(
+                backgroundColor: Colors.transparent, 
+                insetPadding: EdgeInsets.all(10), 
+                child: GestureDetector(
+                  onTap: () {}, 
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
 }

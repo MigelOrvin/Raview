@@ -27,7 +27,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _pageController = PageController();
     pages = [
-      exploreScreen(),
+      ExploreScreen(),
       wishlistScreen(),
       const ProfileScreen(latitude: null, longitude: null, locality: null),
     ];
@@ -51,10 +51,10 @@ class _HomePageState extends State<HomePage> {
         setState(() {
           latitude = position.latitude;
           longitude = position.longitude;
-          locality = placemarks[0].thoroughfare;
+          locality = placemarks[0].street;
 
           pages = [
-            exploreScreen(),
+            ExploreScreen(),
             wishlistScreen(),
             ProfileScreen(
               latitude: latitude,
@@ -71,7 +71,7 @@ class _HomePageState extends State<HomePage> {
         locality = null;
 
         pages = [
-          exploreScreen(),
+          ExploreScreen(),
           wishlistScreen(),
           ProfileScreen(
             latitude: latitude,
@@ -100,10 +100,10 @@ class _HomePageState extends State<HomePage> {
             boxShadow: [
               BoxShadow(
                 color: context.isDarkMode
-                    ? const Color.fromARGB(255, 0, 0, 0).withOpacity(0.3)
-                    : const Color.fromARGB(255, 0, 0, 0).withOpacity(0.3),
+                    ? const Color.fromARGB(255, 255, 255, 255).withOpacity(0.3)
+                    : const Color.fromARGB(255, 0, 0, 0).withOpacity(0.2),
                 blurRadius: 20,
-                offset: const Offset(0, 20),
+                offset: const Offset(0, 10),
               ),
             ],
           ),
