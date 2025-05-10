@@ -47,7 +47,6 @@ class _DisplaylistplaceState extends State<Displaylistplace> {
   @override
   void didUpdateWidget(covariant Displaylistplace oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Reset semua saat filter berubah atau search berubah
     if (oldWidget.jenis != widget.jenis ||
         oldWidget.searchQuery != widget.searchQuery) {
       setState(() {
@@ -63,7 +62,6 @@ class _DisplaylistplaceState extends State<Displaylistplace> {
   Future<void> _fetchPlaces() async {
     if (_isLoading) return;
 
-    // Reset data jika search/kategori berubah
     if (_lastDoc == null) {
       _places.clear();
     }
@@ -72,7 +70,6 @@ class _DisplaylistplaceState extends State<Displaylistplace> {
 
     Query query;
     if (widget.searchQuery.isNotEmpty) {
-      // Jika kategori 'all', ambil semua, jika tidak, filter jenis
       if (widget.jenis.toLowerCase() == 'all') {
         query = placeCollection.orderBy('nama_lower');
       } else {
@@ -80,7 +77,6 @@ class _DisplaylistplaceState extends State<Displaylistplace> {
             .where('jenis', isEqualTo: widget.jenis)
             .orderBy('nama_lower');
       }
-      // Ambil semua data untuk search substring (tanpa pagination)
       final snapshot = await query.get();
       _places = snapshot.docs;
       setState(() {
@@ -90,7 +86,6 @@ class _DisplaylistplaceState extends State<Displaylistplace> {
       return;
     }
 
-    // Mode normal (pagination)
     if (!_hasMore) return;
     query =
         widget.jenis.toLowerCase() == 'all'
@@ -223,7 +218,6 @@ class _DisplaylistplaceState extends State<Displaylistplace> {
       );
     }
 
-    // Filter hasil berdasarkan search query
     List<DocumentSnapshot> filteredPlaces = _places;
     if (widget.searchQuery.isNotEmpty) {
       final lowerQuery = widget.searchQuery.toLowerCase();
@@ -238,7 +232,6 @@ class _DisplaylistplaceState extends State<Displaylistplace> {
           }).toList();
     }
 
-    // Tampilkan pesan jika tidak ada hasil search
     if (widget.searchQuery.isNotEmpty &&
         filteredPlaces.isEmpty &&
         !_isLoading) {

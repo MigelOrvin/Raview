@@ -16,7 +16,6 @@ class wishlistScreen extends StatefulWidget {
 }
 
 class _wishlistScreenState extends State<wishlistScreen> {
-  // Tambahkan cache untuk data place
   final Map<String, DocumentSnapshot> _placeCache = {};
 
   Future<void> removeFromWishlist(
@@ -55,7 +54,6 @@ class _wishlistScreenState extends State<wishlistScreen> {
         bottom: false,
         child: Column(
           children: [
-            // Logo section
             Padding(
               padding: const EdgeInsets.only(),
               child: Center(
@@ -66,7 +64,6 @@ class _wishlistScreenState extends State<wishlistScreen> {
                 ),
               ),
             ),
-            // Wishlist items
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
@@ -77,12 +74,10 @@ class _wishlistScreenState extends State<wishlistScreen> {
                     )
                     .snapshots(),
                 builder: (context, snapshot) {
-                  // Loading state check
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return Center(child: CircularProgressIndicator());
                   }
 
-                  // Empty state check
                   if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                     return Center(
                       child: Text(
@@ -98,7 +93,6 @@ class _wishlistScreenState extends State<wishlistScreen> {
 
                   final wishlistDocs = snapshot.data!.docs;
 
-                  // Gunakan CustomScrollView & SliverGrid untuk kinerja lebih baik
                   return Padding(
                     padding: const EdgeInsets.only(left: 15, right: 15),
                     child: CustomScrollView(
@@ -118,7 +112,6 @@ class _wishlistScreenState extends State<wishlistScreen> {
                                 final placeId = wishlistDoc['placeId'];
                                 final wishlistId = wishlistDoc.id;
 
-                                // Gunakan FutureBuilder dengan cache untuk mengurangi fetch ulang
                                 return FutureBuilder<DocumentSnapshot>(
                                   future: _getPlaceSnapshot(placeId),
                                   builder: (context, placeSnapshot) {
@@ -285,7 +278,6 @@ class _wishlistScreenState extends State<wishlistScreen> {
     );
   }
 
-  // Helper method untuk mengambil & cache place data
   Future<DocumentSnapshot> _getPlaceSnapshot(String placeId) async {
     if (_placeCache.containsKey(placeId)) {
       return _placeCache[placeId]!;

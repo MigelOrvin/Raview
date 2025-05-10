@@ -28,7 +28,6 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize future in initState
     final placeId = widget.place.id;
     _reviewsFuture =
         FirebaseFirestore.instance
@@ -39,7 +38,6 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
             .get();
   }
 
-  // Stream untuk mendapatkan status favorite
   Stream<bool> isFavorited(String placeId) {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return Stream.value(false);
@@ -116,7 +114,6 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
 
   void _refreshData() {
     setState(() {
-      // Reload review data
       final placeId = widget.place.id;
       _reviewsFuture =
           FirebaseFirestore.instance
@@ -126,7 +123,6 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
               .limit(1)
               .get();
 
-      // Reload place data
       FirebaseFirestore.instance.collection('allPlace').doc(placeId).get().then(
         (doc) {
           if (doc.exists && mounted) {
@@ -205,7 +201,6 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
                   ),
                   SizedBox(height: 20),
 
-                  // Deskripsi dengan Show more/less dan animasi
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -236,7 +231,6 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
                         ),
                       ),
 
-                      // Show more/less button dengan animasi
                       if (deskripsi.length > 150)
                         GestureDetector(
                           onTap: () {
@@ -271,14 +265,12 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
                     ],
                   ),
 
-                  // Animasi untuk SizedBox
                   AnimatedContainer(
                     duration: _animationDuration,
                     height: 20,
                     curve: Curves.easeInOut,
                   ),
 
-                  // Row dengan animasi
                   AnimatedContainer(
                     duration: _animationDuration,
                     curve: Curves.easeInOut,
@@ -345,7 +337,6 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
                   ),
                   SizedBox(height: 20),
 
-                  // Latest Review
                   _buildLatestReview(placeId),
                 ],
               ),
@@ -445,7 +436,6 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Container untuk Back
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -465,7 +455,6 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
                   ),
                 ),
                 SizedBox(width: size.width * 0.66),
-                // Container untuk Favorite
                 StreamBuilder<bool>(
                   stream: isFavorited(placeId),
                   builder: (context, snapshot) {
@@ -535,7 +524,6 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
                 ? timeago.format(timestamp, locale: 'en_short')
                 : 'recent';
 
-        // Tambahkan ini untuk gambar review
         final List<dynamic> imageUrls = reviewData['imageUrls'] ?? [];
 
         return Container(
@@ -548,7 +536,6 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Judul Latest Review
               Text(
                 "Latest Review",
                 style: TextStyle(
@@ -559,7 +546,6 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
               ),
               SizedBox(height: 10),
 
-              // Preview gambar review (jika ada)
               if (imageUrls.isNotEmpty)
                 Container(
                   height: 120,
@@ -570,7 +556,6 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
                     itemBuilder: (context, index) {
                       return GestureDetector(
                         onTap: () {
-                          // Tampilkan gambar full screen dengan background blur
                           _showFullImageDialog(imageUrls[index]);
                         },
                         child: Container(
@@ -589,7 +574,6 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
                   ),
                 ),
 
-              // Isi komentar
               Text(
                 comment,
                 style: TextStyle(
@@ -601,16 +585,16 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
               ),
               SizedBox(height: 15),
 
-              // User info row
               Row(
                 children: [
-                  // Profile picture
                   GestureDetector(
-                    onTap:  () => _showFullImageDialog(profilePic),
+                    onTap: () => _showFullImageDialog(profilePic),
                     child: CircleAvatar(
                       radius: 15,
                       backgroundImage:
-                          profilePic.isNotEmpty ? NetworkImage(profilePic) : null,
+                          profilePic.isNotEmpty
+                              ? NetworkImage(profilePic)
+                              : null,
                       child:
                           profilePic.isEmpty
                               ? Icon(Icons.person, size: 20, color: Colors.grey)
@@ -619,12 +603,10 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
                   ),
                   SizedBox(width: 10),
 
-                  // Username dan waktu
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Username
                         Text(
                           username,
                           style: TextStyle(
@@ -639,7 +621,6 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
 
-                        // Waktu posting
                         Text(
                           timeAgo,
                           style: TextStyle(color: Colors.grey, fontSize: 12),
@@ -647,18 +628,8 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
                       ],
                     ),
                   ),
-
-                  // Show all reviews button
                   GestureDetector(
-                    onTap: () {
-                      // Tambahkan navigasi ke halaman semua review
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //     builder: (context) => AllReviewsScreen(placeId: placeId),
-                      //   ),
-                      // );
-                    },
+                    onTap: () {},
                     child: Text(
                       "See All",
                       style: TextStyle(
@@ -679,35 +650,30 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
   void _showFullImageDialog(String imageUrl) {
     showDialog(
       context: context,
-      barrierDismissible: true, 
+      barrierDismissible: true,
       builder: (BuildContext context) {
         return Stack(
           children: [
             GestureDetector(
               onTap: () {
-                Navigator.of(context).pop(); 
+                Navigator.of(context).pop();
               },
               child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10), 
-                child: Container(
-                  color: Colors.black.withOpacity(0.5), 
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(color: Colors.black.withOpacity(0.5)),
+              ),
+            ),
+            Dialog(
+              backgroundColor: Colors.transparent,
+              insetPadding: EdgeInsets.all(10),
+              child: GestureDetector(
+                onTap: () {},
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.network(imageUrl, fit: BoxFit.contain),
                 ),
               ),
             ),
-             Dialog(
-                backgroundColor: Colors.transparent, 
-                insetPadding: EdgeInsets.all(10), 
-                child: GestureDetector(
-                  onTap: () {}, 
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.network(
-                      imageUrl,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-              ),
           ],
         );
       },

@@ -23,7 +23,7 @@ class _PostreviewState extends State<Postreview> {
   final ImagePicker _picker = ImagePicker();
   List<File> _images = [];
   bool _isUploading = false;
-  int _rating = 0; // Default tidak ada rating
+  int _rating = 0; 
 
   void _showImageSourceDialog() {
     showDialog(
@@ -149,7 +149,6 @@ class _PostreviewState extends State<Postreview> {
           .get();
       final userData = userDoc.data() as Map<String, dynamic>? ?? {};
 
-      // Tambahkan review ke koleksi reviews
       await FirebaseFirestore.instance.collection('reviews').add({
         'placeId': widget.place.id,
         'userId': user.uid,
@@ -161,19 +160,15 @@ class _PostreviewState extends State<Postreview> {
         'timestamp': FieldValue.serverTimestamp(),
       });
 
-      // Periksa collection dan document ID yang benar
-      // Gunakan properti yang benar dari widget.place
       final placeRef = FirebaseFirestore.instance
-          .collection('allPlace') // Pastikan ini collection yang benar
+          .collection('allPlace')
           .doc(widget.place.id);
       
-      // Periksa apakah dokumen ada sebelum transaction
       final docSnapshot = await placeRef.get();
       if (!docSnapshot.exists) {
         throw Exception("Document tidak ditemukan. ID: ${widget.place.id}");
       }
 
-      // Update rating dan jumlah review
       await FirebaseFirestore.instance.runTransaction((transaction) async {
         final placeSnapshot = await transaction.get(placeRef);
         
@@ -181,7 +176,6 @@ class _PostreviewState extends State<Postreview> {
         final currentReviewCount = placeData['review'] ?? 0;
         final currentRating = placeData['rating'] ?? 0.0;
 
-        // Konversi ke double untuk menghindari error tipe
         final double currentRatingDouble = currentRating is int 
             ? currentRating.toDouble() 
             : currentRating;
@@ -210,7 +204,6 @@ class _PostreviewState extends State<Postreview> {
         _isUploading = false;
       });
 
-      // Tampilkan snackbar sukses dengan AwesomeSnackbarContent
       final successSnackbar = SnackBar(
         elevation: 0,
         behavior: SnackBarBehavior.floating,
@@ -228,7 +221,6 @@ class _PostreviewState extends State<Postreview> {
     } catch (e) {
       setState(() => _isUploading = false);
       
-      // Tampilkan error dengan AwesomeSnackbarContent
       final errorSnackbar = SnackBar(
         elevation: 0,
         behavior: SnackBarBehavior.floating,
