@@ -94,16 +94,16 @@ class _HomePageState extends State<HomePage> {
           margin: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
           decoration: BoxDecoration(
             color: context.isDarkMode
-                ? const Color(0xff1E1E1E)
-                : const Color(0xffFAFAFA).withOpacity(0.5),
+                ? const Color(0xff1E1E1E).withOpacity(0.9)
+                : const Color(0xffFAFAFA).withOpacity(0.9),
             borderRadius: const BorderRadius.all(Radius.circular(60)),
             boxShadow: [
               BoxShadow(
                 color: context.isDarkMode
                     ? const Color.fromARGB(255, 255, 255, 255).withOpacity(0.3)
                     : const Color.fromARGB(255, 0, 0, 0).withOpacity(0.2),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+                blurRadius: 2,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
@@ -146,6 +146,7 @@ class _HomePageState extends State<HomePage> {
         },
         children: pages,
       ),
+      
     );
   }
 

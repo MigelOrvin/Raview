@@ -25,6 +25,7 @@ dependencies:
   image_cropper:
   shimmer:
   another_carousel_pro: ^1.0.2
+  timeago:
 
   
 
@@ -44,6 +45,7 @@ flutter:
     - assets/fonts/
     - assets/snackbar/
     - assets/snackbar/types/
+    - assets/placeholder.png
   
   
   

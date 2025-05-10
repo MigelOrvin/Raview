@@ -34,6 +34,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _isEmailVisible = false;
   File? _image;
   final ImagePicker _picker = ImagePicker();
+  int _wishlistCount = 0;
+  bool _isLoadingWishlist = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchWishlistCount();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +85,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   _buildUserInfo(context, userData),
                   _buildActions(context),
-                  _buildStats(context),
+                  _buildStats(context, userData),
                   const SizedBox(width: 1),
                 ],
               ),
@@ -259,45 +267,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildStats(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "30",
-          style: TextStyle(
-            fontSize: 25,
-            fontWeight: FontWeight.bold,
-            color: context.isDarkMode ? Colors.white : Colors.black,
-          ),
+  Widget _buildStats(BuildContext context, Map<String, dynamic> userData) {
+  return Column(
+    mainAxisAlignment: MainAxisAlignment.start,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        userData['reviews'] != null
+            ? userData['reviews'].toString()
+            : '0',
+        style: TextStyle(
+          fontSize: 25,
+          fontWeight: FontWeight.bold,
+          color: context.isDarkMode ? Colors.white : Colors.black,
         ),
-        Text(
-          "Reviews",
-          style: TextStyle(
-            fontSize: 14,
-            color: context.isDarkMode ? Colors.white : Colors.black,
-          ),
+      ),
+      Text(
+        "Reviews",
+        style: TextStyle(
+          fontSize: 14,
+          color: context.isDarkMode ? Colors.white : Colors.black,
         ),
-        const Text("________"),
-        Text(
-          "20",
-          style: TextStyle(
-            fontSize: 25,
-            fontWeight: FontWeight.bold,
-            color: context.isDarkMode ? Colors.white : Colors.black,
-          ),
+      ),
+      const Text("________"),
+      _isLoadingWishlist
+          ? SizedBox(
+              height: 25,
+              width: 25,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  context.isDarkMode ? Colors.white : Colors.black,
+                ),
+              ),
+            )
+          : Text(
+              _wishlistCount.toString(),
+              style: TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+                color: context.isDarkMode ? Colors.white : Colors.black,
+              ),
+            ),
+      Text(
+        "Wishlist",
+        style: TextStyle(
+          fontSize: 14,
+          color: context.isDarkMode ? Colors.white : Colors.black,
         ),
-        Text(
-          "Wishlist",
-          style: TextStyle(
-            fontSize: 14,
-            color: context.isDarkMode ? Colors.white : Colors.black,
-          ),
-        ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
 
   String _obfuscateEmail(String email) {
     final parts = email.split('@');
@@ -309,6 +330,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ? '${username[0]}${'*' * (username.length - 2)}${username[username.length - 1]}'
             : '*' * username.length;
     return '$obfuscatedUsername@$domain';
+  }
+
+  Future<void> _fetchWishlistCount() async {
+    setState(() {
+      _isLoadingWishlist = true;
+    });
+    
+    try {
+      final userId = FirebaseAuth.instance.currentUser!.uid;
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('wishlist')
+          .where('userId', isEqualTo: userId)
+          .get();
+      
+      setState(() {
+        _wishlistCount = querySnapshot.docs.length;
+        _isLoadingWishlist = false;
+      });
+    } catch (e) {
+      print('Error fetching wishlist count: $e');
+      setState(() {
+        _isLoadingWishlist = false;
+      });
+    }
   }
 
   Future<void> _pickImage(ImageSource source) async {

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:raview/designdata/auto/isdarkmode.dart';
 import 'package:raview/mainfile/homepage/detailhomepage/explorewidget/displaylistplace.dart';
+import 'package:raview/mainfile/homepage/detailhomepage/explorewidget/map.dart';
 import 'package:raview/mainfile/homepage/detailhomepage/explorewidget/searchbarexplore.dart';
 
 class ExploreScreen extends StatefulWidget {
@@ -17,7 +18,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
   );
   int selected = 0;
   String? selectedCategory;
-
+  final TextEditingController _searchController = TextEditingController();
+  String searchQuery = '';
 
   @override
   void initState() {
@@ -26,19 +28,45 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
+    final isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
     return Scaffold(
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
-            SearchBarAndFilter(),
+            SearchBarAndFilter(
+              controller: _searchController,
+              onChanged: (val) {
+                setState(() {
+                  searchQuery = val.trim();
+                });
+              },
+            ),
             catagoryList(size),
-            Expanded(child: Displaylistplace(jenis: selectedCategory!,))
+            Expanded(
+              child: Displaylistplace(
+                jenis: selectedCategory!,
+                searchQuery: searchQuery,
+              ),
+            )
           ],
+          
         ),
       ),
+      floatingActionButtonLocation: isKeyboardVisible
+        ? null
+        : FloatingActionButtonLocation.centerDocked,
+    floatingActionButton: isKeyboardVisible
+        ? null
+        : const MapInfo(),
     );
   }
 
