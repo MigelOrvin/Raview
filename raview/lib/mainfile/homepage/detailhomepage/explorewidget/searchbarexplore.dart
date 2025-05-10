@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:raview/designdata/auto/isdarkmode.dart';
 
 class SearchBarAndFilter extends StatelessWidget {
-  const SearchBarAndFilter({super.key});
+  final TextEditingController? controller;
+  final ValueChanged<String>? onChanged;
+  const SearchBarAndFilter({super.key, this.controller, this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +48,8 @@ class SearchBarAndFilter extends StatelessWidget {
                           height: 20,
                           width: MediaQuery.of(context).size.width * 0.5,
                           child: TextField(
+                            controller: controller,
+                            onChanged: onChanged,
                             style: TextStyle(
                               fontSize: 13,
                               color: Colors.black,
