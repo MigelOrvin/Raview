@@ -26,6 +26,7 @@ dependencies:
   shimmer:
   another_carousel_pro: ^1.0.2
   timeago:
+  google_maps_flutter:
 
   
 
