@@ -506,7 +506,6 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
                   ),
                 ),                Spacer(),
 
-                // Map button to navigate to MapPage
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -530,31 +529,6 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
                         Icons.map,
                         color: Colors.black,
                       ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 12),
-
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MapPage(),
-                          settings: RouteSettings(
-                            arguments: {'placeId': placeId},
-                          ),
-                        ),
-                      );
-                    },
-                    child: Padding(
-                      padding: EdgeInsets.all(6),
-                      child: Icon(Icons.map, color: Colors.black),
                     ),
                   ),
                 ),
