@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 
@@ -42,7 +41,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     _fetchWishlistCount();
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -52,7 +50,105 @@ class _ProfileScreenState extends State<ProfileScreen> {
               : const Color(0xffFAFAFA),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
-        children: [_profileInfo(context)],
+        children: [
+          _profileInfo(context),
+          SizedBox(height: 20),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 25),
+            child: Container(
+              padding: EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                color: context.isDarkMode ? const Color(0xff1E1E1E) : Colors.white,
+                borderRadius: BorderRadius.circular(15),
+                boxShadow: [
+                  BoxShadow(
+                    color: context.isDarkMode
+                        ? Colors.white.withOpacity(0.05)
+                        : Colors.black.withOpacity(0.05),
+                    spreadRadius: 2,
+                    blurRadius: 5,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        context.isDarkMode ? Icons.nightlight_round : Icons.wb_sunny,
+                        color: context.isDarkMode ? Colors.white : Colors.black,
+                      ),
+                      SizedBox(width: 10),
+                      Text(
+                        "Dark Mode",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: context.isDarkMode ? Colors.white : Colors.black,
+                        ),
+                      ),
+                    ],
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+                    },
+                    child: AnimatedContainer(
+                      duration: Duration(milliseconds: 300),
+                      width: 50,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(15),
+                        color: context.isDarkMode 
+                            ? Color(0xff98855A) 
+                            : Colors.grey.shade300,
+                      ),
+                      child: Stack(
+                        children: [
+                          AnimatedPositioned(
+                            duration: Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                            left: context.isDarkMode ? 22 : 0,
+                            right: context.isDarkMode ? 0 : 22,
+                            top: 2,
+                            child: Container(
+                              width: 24,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black12,
+                                    blurRadius: 4,
+                                    spreadRadius: 1,
+                                  )
+                                ],
+                              ),
+                              child: Center(
+                                child: Icon(
+                                  context.isDarkMode 
+                                      ? Icons.nightlight_round 
+                                      : Icons.wb_sunny,
+                                  size: 14,
+                                  color: context.isDarkMode 
+                                      ? Color(0xff98855A) 
+                                      : Colors.orange,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -234,7 +330,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-
   Widget _buildActions(BuildContext context) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -256,7 +351,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SizedBox(height: 100),
         GestureDetector(
           onTap: () {
-            Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+            _showEditUsernameDialog(context);
           },
           child: Icon(
             Icons.edit,
@@ -482,6 +577,150 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         );
       },
+    );
+  }
+
+  void _showEditUsernameDialog(BuildContext context) {
+    final TextEditingController _usernameController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: context.isDarkMode ? const Color(0xff292828) : Colors.white,
+        title: Text(
+          "Edit Username",
+          style: TextStyle(
+            color: context.isDarkMode ? Colors.white : Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _usernameController,
+              style: TextStyle(
+                color: context.isDarkMode ? Colors.white : Colors.black,
+              ),
+              decoration: InputDecoration(
+                hintText: "Enter new username",
+                hintStyle: TextStyle(
+                  color: context.isDarkMode ? Colors.white70 : Colors.black54,
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(
+                    color: Color(0xff98855A),
+                  ),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(
+                    color: Color(0xff98855A),
+                    width: 2,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 20),
+            
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Dark Mode",
+                  style: TextStyle(
+                    color: context.isDarkMode ? Colors.white : Colors.black,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                SizedBox(width: 10),
+                GestureDetector(
+                  onTap: () {
+                    Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+                  },
+                  child: AnimatedContainer(
+                    duration: Duration(milliseconds: 300),
+                    width: 50,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15),
+                      color: context.isDarkMode 
+                          ? Color(0xff98855A) 
+                          : Colors.grey.shade300,
+                    ),
+                    child: Stack(
+                      children: [
+                        AnimatedPositioned(
+                          duration: Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                          left: context.isDarkMode ? 22 : 0,
+                          right: context.isDarkMode ? 0 : 22,
+                          top: 2,
+                          child: Container(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 4,
+                                  spreadRadius: 1,
+                                )
+                              ],
+                            ),
+                            child: Center(
+                              child: Icon(
+                                context.isDarkMode 
+                                    ? Icons.nightlight_round 
+                                    : Icons.wb_sunny,
+                                size: 16,
+                                color: context.isDarkMode 
+                                    ? Color(0xff98855A) 
+                                    : Colors.orange,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              "Cancel",
+              style: TextStyle(
+                color: Color(0xff98855A),
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (_usernameController.text.isNotEmpty) {
+                final userId = FirebaseAuth.instance.currentUser!.uid;
+                await FirebaseFirestore.instance
+                    .collection('Users')
+                    .doc(userId)
+                    .update({'name': _usernameController.text});
+                Navigator.pop(context);
+              }
+            },
+            child: Text(
+              "Save",
+              style: TextStyle(
+                color: Color(0xff98855A),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

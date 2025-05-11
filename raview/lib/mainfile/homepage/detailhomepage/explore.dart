@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:raview/designdata/auto/isdarkmode.dart';
 import 'package:raview/mainfile/homepage/detailhomepage/explorewidget/displaylistplace.dart';
-import 'package:raview/mainfile/homepage/detailhomepage/explorewidget/map.dart';
 import 'package:raview/mainfile/homepage/detailhomepage/explorewidget/searchbarexplore.dart';
 
 class ExploreScreen extends StatefulWidget {
@@ -36,7 +35,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
-    final isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
     return Scaffold(
       body: SafeArea(
         bottom: false,
@@ -61,12 +59,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
           
         ),
       ),
-      floatingActionButtonLocation: isKeyboardVisible
-        ? null
-        : FloatingActionButtonLocation.centerDocked,
-    floatingActionButton: isKeyboardVisible
-        ? null
-        : const MapInfo(),
     );
   }
 

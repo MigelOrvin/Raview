@@ -24,9 +24,12 @@ dependencies:
   cloud_firestore: ^5.6.6
   image_cropper:
   shimmer:
-  another_carousel_pro: ^1.0.2
+  another_carousel_pro: ^1.0.2  
   timeago:
   google_maps_flutter:
+  google_places_flutter: ^2.1.0
+  http: ^1.1.0
+  url_launcher: ^6.1.11
 
   
 

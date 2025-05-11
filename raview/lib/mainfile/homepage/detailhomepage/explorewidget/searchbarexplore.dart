@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:raview/designdata/auto/isdarkmode.dart';
+import 'package:raview/mainfile/homepage/map/mappage.dart';
 
 class SearchBarAndFilter extends StatelessWidget {
   final TextEditingController? controller;
@@ -88,25 +89,34 @@ class SearchBarAndFilter extends StatelessWidget {
                 ),
               ),
             ),
-          ),
-          SizedBox(width: 8),
-          Container(
-            padding: EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.black54),
-              shape: BoxShape.circle,
-              color: Colors.white,
-              boxShadow: [
-                  BoxShadow(
-                    blurRadius: 7,
-                    spreadRadius: 2,
-                    color: context.isDarkMode
-                        ? const Color.fromARGB(255, 255, 255, 255).withOpacity(0.3)
-                        : const Color.fromARGB(255, 0, 0, 0).withOpacity(0.3),
-                  ),
-                ],
+          ),          SizedBox(width: 8),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MapPage(),
+                ),
+              );
+            },
+            child: Container(
+              padding: EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.black54),
+                shape: BoxShape.circle,
+                color: Colors.white,
+                boxShadow: [
+                    BoxShadow(
+                      blurRadius: 7,
+                      spreadRadius: 2,
+                      color: context.isDarkMode
+                          ? const Color.fromARGB(255, 255, 255, 255).withOpacity(0.3)
+                          : const Color.fromARGB(255, 0, 0, 0).withOpacity(0.3),
+                    ),
+                  ],
+              ),
+              child: Icon(Icons.map_outlined, size: 25,color: Colors.black,),
             ),
-            child: Icon(Icons.tune, size: 25,color: Colors.black,),
           ),
         ],
       ),
