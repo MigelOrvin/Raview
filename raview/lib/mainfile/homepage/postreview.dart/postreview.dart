@@ -12,7 +12,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class Postreview extends StatefulWidget {
   final DocumentSnapshot place;
-  const Postreview({super.key, required this.place});
+  final DocumentSnapshot? existingReview;
+  
+  const Postreview({
+    super.key, 
+    required this.place, 
+    this.existingReview,
+  });
 
   @override
   State<Postreview> createState() => _PostreviewState();
@@ -24,6 +30,25 @@ class _PostreviewState extends State<Postreview> {
   List<File> _images = [];
   bool _isUploading = false;
   int _rating = 0; 
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // Load Komen
+    if (widget.existingReview != null) {
+      final data = widget.existingReview!.data() as Map<String, dynamic>;
+      _commentController.text = data['comment'] ?? '';
+      _rating = data['rating'] ?? 0;
+      
+      // Load existing image URLs
+      final List<dynamic> existingImageUrls = data['imageUrls'] ?? [];
+      _existingImageUrls = List<String>.from(existingImageUrls);
+    }
+  }
+  
+  // Simpan Image
+  List<String> _existingImageUrls = [];
 
   void _showImageSourceDialog() {
     showDialog(
@@ -100,7 +125,6 @@ class _PostreviewState extends State<Postreview> {
     }
     return urls;
   }
-
   Future<void> _submitReview() async {
     if (_commentController.text.trim().isEmpty) {
       final errorSnackbar = SnackBar(
@@ -141,24 +165,43 @@ class _PostreviewState extends State<Postreview> {
       if (_images.isNotEmpty) {
         imageUrls = await _uploadImages();
       }
-
+      
+      // Gabungin image yg di firebase sm yg di upload
+      final allImageUrls = [..._existingImageUrls, ...imageUrls];
+      
       final user = FirebaseAuth.instance.currentUser;
-      final userDoc = await FirebaseFirestore.instance
-          .collection('Users')
-          .doc(user!.uid)
-          .get();
-      final userData = userDoc.data() as Map<String, dynamic>? ?? {};
+      
+      
+      final bool isEditing = widget.existingReview != null;
+      
+      // mbil rating sebelumnya kalo diedit
+      int previousRating = 0;
+      if (isEditing) {
+        final reviewData = widget.existingReview!.data() as Map<String, dynamic>;
+        previousRating = reviewData['rating'] ?? 0;
+      }
 
-      await FirebaseFirestore.instance.collection('reviews').add({
-        'placeId': widget.place.id,
-        'userId': user.uid,
-        'username': userData['name'] ?? 'Anonymous',
-        'profilePicture': userData['profilePicture'] ?? '',
-        'comment': _commentController.text.trim(),
-        'imageUrls': imageUrls,
-        'rating': _rating,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+      // Buat/edit review
+      if (isEditing) {
+        await FirebaseFirestore.instance
+            .collection('reviews')
+            .doc(widget.existingReview!.id)
+            .update({
+          'comment': _commentController.text.trim(),
+          'imageUrls': allImageUrls,
+          'rating': _rating,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+      } else {
+        await FirebaseFirestore.instance.collection('reviews').add({
+          'placeId': widget.place.id,
+          'userId': user!.uid,
+          'comment': _commentController.text.trim(),
+          'imageUrls': allImageUrls,
+          'rating': _rating,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+      }
 
       final placeRef = FirebaseFirestore.instance
           .collection('allPlace')
@@ -180,26 +223,39 @@ class _PostreviewState extends State<Postreview> {
             ? currentRating.toDouble() 
             : currentRating;
 
-        final newReviewCount = currentReviewCount + 1;
-        final totalRating = (currentRatingDouble * currentReviewCount) + _rating;
-        final newRating = totalRating / newReviewCount;
+        if (isEditing) {
+          // Updatee FIREBASEEEAAAAAAAAAAAAAAA
+          final totalRating = (currentRatingDouble * currentReviewCount) - previousRating + _rating;
+          final newRating = totalRating / currentReviewCount;
+          
+          transaction.update(placeRef, {
+            'rating': double.parse(newRating.toStringAsFixed(1)),
+          });
+        } else {
+          // Add a new review
+          final newReviewCount = currentReviewCount + 1;
+          final totalRating = (currentRatingDouble * currentReviewCount) + _rating;
+          final newRating = totalRating / newReviewCount;
 
-        transaction.update(placeRef, {
-          'review': newReviewCount,
-          'rating': double.parse(newRating.toStringAsFixed(1)),
-        });
-      });
-
-      await FirebaseFirestore.instance
-      .collection('Users')
-      .doc(user.uid)
-      .update({
-        'reviews': FieldValue.increment(1)
+          transaction.update(placeRef, {
+            'review': newReviewCount,
+            'rating': double.parse(newRating.toStringAsFixed(1)),
+          });
+          
+          // Nmbhin review kalo baru pertm kali review
+          await FirebaseFirestore.instance
+            .collection('Users')
+            .doc(user!.uid)
+            .update({
+              'reviews': FieldValue.increment(1)
+            });
+        }
       });
 
       setState(() {
         _commentController.clear();
         _images.clear();
+        _existingImageUrls.clear();
         _rating = 0;
         _isUploading = false;
       });
@@ -210,7 +266,9 @@ class _PostreviewState extends State<Postreview> {
         backgroundColor: Colors.transparent,
         content: AwesomeSnackbarContent(
           title: "Success",
-          message: "Review successfully submitted!",
+          message: isEditing 
+              ? "Review successfully updated!" 
+              : "Review successfully submitted!",
           contentType: ContentType.success,
           color: Color(0xff98855A),
         ),
@@ -235,60 +293,126 @@ class _PostreviewState extends State<Postreview> {
       ScaffoldMessenger.of(context).showSnackBar(errorSnackbar);
     }
   }
-
   Widget _imagePickerRow() {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ..._images.map((img) => Stack(
-              children: [
-                Container(
-                  margin: EdgeInsets.only(right: 8),
+        if (_existingImageUrls.isNotEmpty) ...[
+          Text(
+            "Existing Images",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: context.isDarkMode ? Colors.white : Colors.black,
+            ),
+          ),
+          SizedBox(height: 8),
+          Row(
+            children: [
+              ..._existingImageUrls.map((url) => Stack(
+                    children: [
+                      Container(
+                        margin: EdgeInsets.only(right: 8),
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: context.isDarkMode
+                              ? Colors.grey[800]
+                              : Colors.grey[300],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(url, fit: BoxFit.cover),
+                        ),
+                      ),
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _existingImageUrls.remove(url);
+                            });
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.black54,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(Icons.close, color: Colors.white, size: 18),
+                          ),
+                        ),
+                      ),
+                    ],
+                  )),
+            ],
+          ),
+          SizedBox(height: 16),
+        ],
+        Text(
+          _existingImageUrls.isNotEmpty ? "New Images" : "Add Images",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: context.isDarkMode ? Colors.white : Colors.black,
+          ),
+        ),
+        SizedBox(height: 8),
+        Row(
+          children: [
+            ..._images.map((img) => Stack(
+                  children: [
+                    Container(
+                      margin: EdgeInsets.only(right: 8),
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        color: context.isDarkMode
+                            ? Colors.grey[800]
+                            : Colors.grey[300],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.file(img, fit: BoxFit.cover),
+                      ),
+                    ),
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _images.remove(img);
+                          });
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black54,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(Icons.close, color: Colors.white, size: 18),
+                        ),
+                      ),
+                    ),
+                  ],
+                )),
+            if (_images.length < 3)
+              GestureDetector(
+                onTap: _showImageSourceDialog,
+                child: Container(
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
+                    color: context.isDarkMode ? Colors.grey[800] : Colors.grey[300],
                     borderRadius: BorderRadius.circular(12),
-                    color: context.isDarkMode
-                        ? Colors.grey[800]
-                        : Colors.grey[300],
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.file(img, fit: BoxFit.cover),
-                  ),
+                  child: Icon(Icons.add_a_photo, size: 32, color: Colors.grey),
                 ),
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _images.remove(img);
-                      });
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.black54,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(Icons.close, color: Colors.white, size: 18),
-                    ),
-                  ),
-                ),
-              ],
-            )),
-        if (_images.length < 3)
-          GestureDetector(
-            onTap: _showImageSourceDialog,
-            child: Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: context.isDarkMode ? Colors.grey[800] : Colors.grey[300],
-                borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(Icons.add_a_photo, size: 32, color: Colors.grey),
-            ),
-          ),
+          ],
+        ),
       ],
     );
   }
@@ -336,13 +460,12 @@ class _PostreviewState extends State<Postreview> {
         Scaffold(
           bottomNavigationBar: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
-              child: SizedBox(
+              padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),              child: SizedBox(
                 width: double.infinity,
                 height: 48,
                 child: BasicButton(
                   onPressed: _submitReview,
-                  title: "Post Review",
+                  title: widget.existingReview != null ? "Update Review" : "Post Review",
                 ),
               ),
             ),
@@ -371,10 +494,9 @@ class _PostreviewState extends State<Postreview> {
                           child: Icon(Icons.close, color: Colors.black),
                         ),
                       ),
-                      const SizedBox(width: 20),
-                      Expanded(
+                      const SizedBox(width: 20),                      Expanded(
                         child: Text(
-                          'Post Review',
+                          widget.existingReview != null ? 'Edit Review' : 'Post Review',
                           style: TextStyle(
                             color: context.isDarkMode ? Colors.white : Colors.black,
                             fontWeight: FontWeight.bold,

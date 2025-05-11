@@ -6,6 +6,7 @@ import 'package:raview/designdata/assets/widgets/BasicButton.dart';
 import 'package:raview/designdata/assets/widgets/snackbar.dart';
 import 'package:raview/designdata/auto/isdarkmode.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:raview/mainfile/homepage/detailplace/detailkomen.dart';
 import 'package:raview/mainfile/homepage/postreview.dart/postreview.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'dart:ui';
@@ -25,6 +26,10 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
 
   Future<QuerySnapshot>? _reviewsFuture;
   Map<String, dynamic>? _updatedPlaceData;
+
+  DocumentSnapshot? _userReview;
+  bool _isCheckingReview = true;
+
   @override
   void initState() {
     super.initState();
@@ -36,6 +41,36 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
             .orderBy('timestamp', descending: true)
             .limit(1)
             .get();
+    
+    _checkUserReview();
+  }
+
+  Future<void> _checkUserReview() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      setState(() => _isCheckingReview = false);
+      return;
+    }
+
+    try {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('reviews')
+          .where('placeId', isEqualTo: widget.place.id)
+          .where('userId', isEqualTo: user.uid)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        setState(() {
+          _userReview = querySnapshot.docs.first;
+          _isCheckingReview = false;
+        });
+      } else {
+        setState(() => _isCheckingReview = false);
+      }
+    } catch (e) {
+      setState(() => _isCheckingReview = false);
+    }
   }
 
   Stream<bool> isFavorited(String placeId) {
@@ -111,7 +146,6 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
       ScaffoldMessenger.of(context).showSnackBar(errorSnackbar);
     }
   }
-
   void _refreshData() {
     setState(() {
       final placeId = widget.place.id;
@@ -128,7 +162,7 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
           if (doc.exists && mounted) {
             setState(() {
               _updatedPlaceData = doc.data() as Map<String, dynamic>;
-            });
+             });
           }
         },
       );
@@ -343,28 +377,33 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: SafeArea(
+      ),      bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
           child: SizedBox(
             width: double.infinity,
             height: 48,
-            child: BasicButton(
-              onPressed: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => Postreview(place: widget.place),
-                  ),
-                );
+            child: _isCheckingReview 
+              ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff98855A))))
+              : BasicButton(
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Postreview(
+                          place: widget.place,
+                          existingReview: _userReview,
+                        ),
+                      ),
+                    );
 
-                if (result == true) {
-                  _refreshData();
-                }
-              },
-              title: "Add Review",
-            ),
+                    if (result == true) {
+                      _refreshData();
+                      _checkUserReview();
+                    }
+                  },
+                  title: _userReview != null ? "Edit Review" : "Add Review",
+                ),
           ),
         ),
       ),
@@ -483,9 +522,7 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
         ),
       ],
     );
-  }
-
-  Widget _buildLatestReview(String placeId) {
+  }  Widget _buildLatestReview(String placeId) {
     return FutureBuilder<QuerySnapshot>(
       future: _reviewsFuture,
       builder: (context, snapshot) {
@@ -497,7 +534,16 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
           );
         }
 
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+        bool hasReviews = snapshot.hasData && snapshot.data!.docs.isNotEmpty;
+        
+        int reviewCount = 0;
+        if (_updatedPlaceData != null) {
+          reviewCount = _updatedPlaceData!['review'] ?? 0;
+        } else {
+          reviewCount = widget.place['review'] ?? 0;
+        }
+        
+        if (!hasReviews || reviewCount == 0) {
           return Container(
             padding: EdgeInsets.all(15),
             decoration: BoxDecoration(
@@ -513,90 +559,96 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
           );
         }
 
-        final reviewData =
-            snapshot.data!.docs[0].data() as Map<String, dynamic>;
-        final comment = reviewData['comment'] ?? '';
-        final username = reviewData['username'] ?? 'Anonymous';
-        final profilePic = reviewData['profilePicture'] ?? '';
+        final reviewData = snapshot.data!.docs[0].data() as Map<String, dynamic>;        final comment = reviewData['comment'] ?? '';
+        final userId = reviewData['userId'] ?? '';
         final timestamp = (reviewData['timestamp'] as Timestamp?)?.toDate();
-        final timeAgo =
-            timestamp != null
-                ? timeago.format(timestamp, locale: 'en_short')
-                : 'recent';
-
+        final timeAgo = timestamp != null
+            ? timeago.format(timestamp, locale: 'en_short')
+            : 'recent';
+        final rating = reviewData['rating'] ?? 0;
         final List<dynamic> imageUrls = reviewData['imageUrls'] ?? [];
+        final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+        final bool isUserReview = userId == currentUserId;
 
-        return Container(
-          margin: EdgeInsets.only(bottom: 20),
-          padding: EdgeInsets.all(15),
-          decoration: BoxDecoration(
-            color: context.isDarkMode ? Colors.grey[800] : Colors.grey[200],
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Latest Review",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xff98855A),
-                  fontSize: 16,
-                ),
+        return FutureBuilder<DocumentSnapshot>(
+          future: FirebaseFirestore.instance.collection('Users').doc(userId).get(),
+          builder: (context, userSnapshot) {
+            String username = 'Anonymous';
+            String profilePic = '';
+            
+            if (userSnapshot.hasData) {
+              final userData = userSnapshot.data!.data() as Map<String, dynamic>?;
+              username = userData?['name'] ?? 'Anonymous';
+              profilePic = userData?['profilePicture'] ?? '';
+            }
+
+            return Container(
+              margin: EdgeInsets.only(bottom: 20),
+              padding: EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                color: context.isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                borderRadius: BorderRadius.circular(12),
               ),
-              SizedBox(height: 10),
-
-              if (imageUrls.isNotEmpty)
-                Container(
-                  height: 120,
-                  margin: EdgeInsets.only(bottom: 15),
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: imageUrls.length,
-                    itemBuilder: (context, index) {
-                      return GestureDetector(
-                        onTap: () {
-                          _showFullImageDialog(imageUrls[index]);
-                        },
-                        child: Container(
-                          width: 120,
-                          margin: EdgeInsets.only(right: 10),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            image: DecorationImage(
-                              image: NetworkImage(imageUrls[index]),
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                      );
-                    },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Latest Review",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xff98855A),
+                      fontSize: 16,
+                    ),
                   ),
-                ),
+                  SizedBox(height: 10),
 
-              Text(
-                comment,
-                style: TextStyle(
-                  color: context.isDarkMode ? Colors.white : Colors.black87,
-                  fontSize: 14,
-                ),
-                maxLines: 4,
-                overflow: TextOverflow.ellipsis,
-              ),
-              SizedBox(height: 15),
+                  if (imageUrls.isNotEmpty)
+                    Container(
+                      height: 120,
+                      margin: EdgeInsets.only(bottom: 15),
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: imageUrls.length,
+                        itemBuilder: (context, index) {
+                          return GestureDetector(
+                            onTap: () {
+                              _showFullImageDialog(imageUrls[index]);
+                            },
+                            child: Container(
+                              width: 120,
+                              margin: EdgeInsets.only(right: 10),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                image: DecorationImage(
+                                  image: NetworkImage(imageUrls[index]),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
 
-              Row(
+                  Text(
+                    comment,
+                    style: TextStyle(
+                      color: context.isDarkMode ? Colors.white : Colors.black87,
+                      fontSize: 14,
+                    ),
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 15),              Row(
                 children: [
                   GestureDetector(
-                    onTap: () => _showFullImageDialog(profilePic),
+                    onTap: () => profilePic.isNotEmpty ? _showFullImageDialog(profilePic) : null,
                     child: CircleAvatar(
                       radius: 15,
-                      backgroundImage:
-                          profilePic.isNotEmpty
+                      backgroundImage: profilePic.isNotEmpty
                               ? NetworkImage(profilePic)
                               : null,
-                      child:
-                          profilePic.isEmpty
+                      child: profilePic.isEmpty
                               ? Icon(Icons.person, size: 20, color: Colors.grey)
                               : null,
                     ),
@@ -611,10 +663,7 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
                           username,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color:
-                                context.isDarkMode
-                                    ? Colors.white
-                                    : Colors.black,
+                            color: context.isDarkMode ? Colors.white : Colors.black,
                             fontSize: 14,
                           ),
                           maxLines: 1,
@@ -628,8 +677,31 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
                       ],
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {},
+
+                  if (isUserReview)
+                    IconButton(
+                      onPressed: () => _confirmDeleteReview(snapshot.data!.docs[0], rating),
+                      icon: Icon(
+                        Icons.delete,
+                        color: Colors.red[300],
+                        size: 20,
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: BoxConstraints(),
+                    ),
+                    GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AllCommentScreen(
+                                placeId: placeId,
+                                placeName: widget.place['nama'],
+                                onReviewDeleted: _refreshData,
+                              ),
+                        ),
+                      );
+                    },
                     child: Text(
                       "See All",
                       style: TextStyle(
@@ -640,8 +712,19 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
                   ),
                 ],
               ),
-            ],
-          ),
+                  Row(
+                    children: List.generate(5, (index) {
+                      return Icon(
+                        index < rating ? Icons.star : Icons.star_border,
+                        color: index < rating ? Color(0xff98855A) : Colors.grey,
+                        size: 18,
+                      );
+                    }),
+                  ),
+                ],
+              ),
+            );
+          }
         );
       },
     );
@@ -678,5 +761,130 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
         );
       },
     );
+  }
+
+  void _confirmDeleteReview(DocumentSnapshot review, int reviewRating) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: context.isDarkMode ? const Color(0xff292828) : Colors.white,
+        title: Text(
+          "Delete Review",
+          style: TextStyle(
+            color: context.isDarkMode ? Colors.white : Colors.black,
+          ),
+        ),
+        content: Text(
+          "Are you sure you want to delete this review?",
+          style: TextStyle(
+            color: context.isDarkMode ? Colors.white : Colors.black,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              "Cancel",
+              style: TextStyle(
+                color: context.isDarkMode ? Colors.white : Colors.black,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _deleteReview(review, reviewRating);
+            },
+            child: Text(
+              "Delete",
+              style: TextStyle(
+                color: Colors.red[300],
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  Future<void> _deleteReview(DocumentSnapshot review, int reviewRating) async {
+    final String placeId = review['placeId'];
+    final String userId = review['userId'];
+    
+    try {
+      
+      await FirebaseFirestore.instance.runTransaction((transaction) async {
+        final placeRef = FirebaseFirestore.instance.collection('allPlace').doc(placeId);
+        final placeSnapshot = await transaction.get(placeRef);
+        
+        if (!placeSnapshot.exists) {
+          throw Exception("Place document not found");
+        }
+        
+        final placeData = placeSnapshot.data() as Map<String, dynamic>;
+        final currentReviewCount = placeData['review'] ?? 0;
+        final currentRating = placeData['rating'] ?? 0.0;
+        
+        
+        final double currentRatingDouble = currentRating is int 
+            ? currentRating.toDouble() 
+            : currentRating;
+        
+        if (currentReviewCount <= 1) {
+          transaction.update(placeRef, {
+            'review': 0,
+            'rating': 0.0,
+          });
+        } else {
+          final totalRatingPoints = currentRatingDouble * currentReviewCount;
+          final newTotalRatingPoints = totalRatingPoints - reviewRating;
+          final newReviewCount = currentReviewCount - 1;
+          final newRating = newTotalRatingPoints / newReviewCount;
+          
+          
+          transaction.update(placeRef, {
+            'review': newReviewCount,
+            'rating': double.parse(newRating.toStringAsFixed(1)),
+          });
+        }
+        
+        transaction.delete(review.reference);
+        
+        final userRef = FirebaseFirestore.instance.collection('Users').doc(userId);
+        transaction.update(userRef, {
+          'reviews': FieldValue.increment(-1)
+        });
+      });
+      
+      _refreshData();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          elevation: 0,
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.transparent,
+          content: AwesomeSnackbarContent(
+            title: "Success",
+            message: "Review deleted successfully",
+            contentType: ContentType.success,
+            color: Color(0xff98855A),
+          ),
+        ),
+      );
+    } catch (e) {
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          elevation: 0,
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.transparent,
+          content: AwesomeSnackbarContent(
+            title: "Error",
+            message: "Failed to delete review: $e",
+            contentType: ContentType.failure,
+            color: Colors.red,
+          ),
+        ),
+      );
+    }
   }
 }
