@@ -22,6 +22,6 @@
   Tunjukkan makanan favoritmu dalam bentuk galeri foto.
 
 - 👥 **Interaksi Sosial**  
-  Suka dan komentari review pengguna lain, serta ikuti pengguna favoritmu.
+  Lihat kesan dan review orang lain.
 
 ---
